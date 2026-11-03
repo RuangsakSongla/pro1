@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมเป่ายิงฉุบสุดสนุก!</title>
+    <!-- นำเข้า Tailwind CSS สำหรับจัดการ Layout แบบรวดเร็ว -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- นำเข้าฟอนต์ภาษาไทย 'Itim' ที่ดูลายมือ น่ารัก เหมาะกับเด็ก -->
+    <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ตั้งค่าฟอนต์หลัก */
+        body {
+            font-family: 'Itim', cursive;
+            /* พื้นหลังสีพาสเทลสดใส */
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ปุ่มกดเด้งๆ สไตล์ของเล่น */
+        .toy-button {
+            transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 8px 0 #cbd5e1, 0 15px 20px rgba(0,0,0,0.1);
+        }
+        .toy-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 0 #cbd5e1, 0 20px 25px rgba(0,0,0,0.15);
+        }
+        .toy-button:active {
+            transform: translateY(8px);
+            box-shadow: 0 0 0 #cbd5e1, 0 5px 10px rgba(0,0,0,0.1);
+        }
+
+        /* แอนิเมชันเด้งดึ๋งตอนแสดงผลลัพธ์ */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        /* แอนิเมชันตอนคอมพิวเตอร์กำลังคิด (เขย่าเบาๆ) */
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(10deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-10deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .thinking {
+            animation: shake 0.3s infinite;
+        }
+
+        /* กรอบตัวการ์ตูนนุ่มๆ */
+        .card-soft {
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 4px solid #fff;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="card-soft w-full max-w-lg p-6 md:p-8 text-center">
+        <!-- ชื่อเกม -->
+        <h1 class="text-4xl md:text-5xl font-bold text-pink-500 mb-6 drop-shadow-md">
+            ✨ เป่ายิงฉุบ! ✨
+        </h1>
+
+        <!-- กระดานคะแนน -->
+        <div class="flex justify-between items-center bg-blue-100 p-4 rounded-2xl mb-8 shadow-inner border-2 border-blue-200">
+            <div class="flex flex-col items-center">
+                <span class="text-xl text-blue-700">น้องๆ (คุณ)</span>
+                <span id="player-score" class="text-4xl font-bold text-blue-600">0</span>
+            </div>
+            <div class="text-3xl font-bold text-gray-400">VS</div>
+            <div class="flex flex-col items-center">
+                <span class="text-xl text-purple-700">คอมพิวเตอร์</span>
+                <span id="computer-score" class="text-4xl font-bold text-purple-600">0</span>
+            </div>
+        </div>
+
+        <!-- พื้นที่แสดงผลการต่อสู้ -->
+        <div class="flex justify-center items-center gap-4 mb-8 min-h-[120px]">
+            <div class="flex flex-col items-center w-1/3">
+                <div id="player-display" class="text-6xl md:text-7xl transition-transform duration-300">❓</div>
+                <div class="text-gray-500 mt-2">คุณเลือก</div>
+            </div>
+            <div class="text-2xl font-bold text-yellow-500 w-1/3" id="vs-text">สู้!</div>
+            <div class="flex flex-col items-center w-1/3">
+                <div id="computer-display" class="text-6xl md:text-7xl transition-transform duration-300">❓</div>
+                <div class="text-gray-500 mt-2">คอมเลือก</div>
+            </div>
+        </div>
+
+        <!-- ข้อความประกาศผล -->
+        <div id="result-message" class="text-3xl md:text-4xl font-bold h-12 mb-8 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 hidden">
+            พร้อมหรือยัง?
+        </div>
+
+        <!-- ปุ่มกดให้เลือก (ค้อน, กระดาษ, กรรไกร) -->
+        <p class="text-xl text-gray-600 mb-4">เลือกอาวุธเลย!</p>
+        <div class="flex justify-center gap-4 md:gap-8">
+            <button onclick="playGame('rock')" class="toy-button bg-white rounded-full w-20 h-20 md:w-24 md:h-24 flex items-center justify-center text-4xl md:text-5xl border-4 border-red-300">
+                ✊
+            </button>
+            <button onclick="playGame('paper')" class="toy-button bg-white rounded-full w-20 h-20 md:w-24 md:h-24 flex items-center justify-center text-4xl md:text-5xl border-4 border-green-300">
+                🖐️
+            </button>
+            <button onclick="playGame('scissors')" class="toy-button bg-white rounded-full w-20 h-20 md:w-24 md:h-24 flex items-center justify-center text-4xl md:text-5xl border-4 border-yellow-300">
+                ✌️
+            </button>
+        </div>
+        
+        <!-- ปุ่มเริ่มใหม่ -->
+        <button onclick="resetGame()" class="mt-8 px-6 py-2 bg-gray-200 text-gray-600 rounded-full font-bold hover:bg-gray-300 transition-colors">
+            🔄 เริ่มคะแนนใหม่
+        </button>
+    </div>
+
+    <!-- สคริปต์ควบคุมเกม -->
+    <script>
+        // กำหนดข้อมูลพื้นฐาน
+        const choices = ['rock', 'paper', 'scissors'];
+        const emojis = {
+            'rock': '✊',
+            'paper': '🖐️',
+            'scissors': '✌️',
+            'question': '❓'
+        };
+
+        // ตัวแปรเก็บคะแนน
+        let playerScore = 0;
+        let computerScore = 0;
+
+        // ดึง Element ต่างๆ มาเตรียมไว้
+        const playerDisplay = document.getElementById('player-display');
+        const computerDisplay = document.getElementById('computer-display');
+        const resultMessage = document.getElementById('result-message');
+        const playerScoreEl = document.getElementById('player-score');
+        const computerScoreEl = document.getElementById('computer-score');
+        const vsText = document.getElementById('vs-text');
+
+        // ฟังก์ชันหลักเมื่อผู้เล่นกดปุ่ม
+        function playGame(playerChoice) {
+            // รีเซ็ตแอนิเมชัน
+            resultMessage.classList.remove('animate-pop');
+            resultMessage.classList.add('hidden');
+            
+            // แสดงสถานะกำลังคิด (เขย่าๆ)
+            playerDisplay.textContent = emojis[playerChoice];
+            computerDisplay.textContent = '🤔';
+            computerDisplay.classList.add('thinking');
+            vsText.textContent = '...';
+
+            // หน่วงเวลาเล็กน้อยให้ตื่นเต้น (600 มิลลิวินาที)
+            setTimeout(() => {
+                // สุ่มคอมพิวเตอร์
+                const computerChoice = choices[Math.floor(Math.random() * 3)];
+                
+                // หยุดแอนิเมชันคิด
+                computerDisplay.classList.remove('thinking');
+                
+                // แสดงสิ่งที่คอมพิวเตอร์เลือก
+                computerDisplay.textContent = emojis[computerChoice];
+
+                // ตัดสินผลแพ้ชนะ
+                determineWinner(playerChoice, computerChoice);
+            }, 600);
+        }
+
+        // ฟังก์ชันตัดสิน
+        function determineWinner(player, computer) {
+            let resultText = '';
+            let resultColorClass = '';
+
+            if (player === computer) {
+                resultText = '🤝 เสมอกัน!';
+                resultColorClass = 'text-gray-500';
+            } else if (
+                (player === 'rock' && computer === 'scissors') ||
+                (player === 'paper' && computer === 'rock') ||
+                (player === 'scissors' && computer === 'paper')
+            ) {
+                resultText = '🎉 เย้! คุณชนะ!';
+                resultColorClass = 'text-green-500';
+                playerScore++;
+                animateScore(playerScoreEl);
+            } else {
+                resultText = '😭 ว้า! คุณแพ้';
+                resultColorClass = 'text-red-500';
+                computerScore++;
+                animateScore(computerScoreEl);
+            }
+
+            // อัปเดตคะแนนบนหน้าจอ
+            playerScoreEl.textContent = playerScore;
+            computerScoreEl.textContent = computerScore;
+
+            // แสดงข้อความพร้อมแอนิเมชันเด้งดึ๋ง
+            resultMessage.textContent = resultText;
+            resultMessage.className = `text-3xl md:text-4xl font-bold h-12 mb-8 ${resultColorClass} animate-pop`;
+            vsText.textContent = 'VS';
+        }
+
+        // ฟังก์ชันทำให้ตัวเลขคะแนนเด้งเวลาได้แต้ม
+        function animateScore(element) {
+            element.classList.add('animate-pop');
+            setTimeout(() => {
+                element.classList.remove('animate-pop');
+            }, 500);
+        }
+
+        // ฟังก์ชันเริ่มเกมใหม่ (เคลียร์คะแนน)
+        function resetGame() {
+            playerScore = 0;
+            computerScore = 0;
+            playerScoreEl.textContent = '0';
+            computerScoreEl.textContent = '0';
+            playerDisplay.textContent = emojis['question'];
+            computerDisplay.textContent = emojis['question'];
+            resultMessage.classList.add('hidden');
+            vsText.textContent = 'สู้!';
+        }
+    </script>
+</body>
+</html>
